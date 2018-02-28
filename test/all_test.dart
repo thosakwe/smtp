@@ -23,6 +23,8 @@ void main() {
       ..recipients.add('someone@somewhere.com')
       ..recipients.add('someone_else@somewhere.com')
       ..bccRecipients.add('hidden@recipient.com')
+      ..ccRecipients.add('also_hidden@recipient.com')
+      ..ccRecipients.add('also_also_hidden@recipient.com')
       ..subject = 'Testing the Dart Mailer library 語'
       ..text = 'This is a cool email message. Whats up? 語';
       //..html = '<h1>Test</h1><p>Hey!</p>';
@@ -32,6 +34,8 @@ void main() {
     var request = await server.first;
     expect(request.mailFrom, envelope.from);
     expect(request.rcptTo, envelope.recipients.reversed.toList());
+    expect(request.headers.bcc, envelope.bccRecipients);
+    expect(request.headers.cc, envelope.ccRecipients);
     expect(request.headers.contentType.mimeType, 'multipart/mixed');
     expect(request.headers.subject, envelope.subject);
   });

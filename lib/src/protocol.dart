@@ -21,9 +21,9 @@ abstract class SmtpHeaders {
 
   String get to;
 
-  String get cc;
+  List<String> get cc;
 
-  String get bcc;
+  List<String> get bcc;
 
   String get subject;
 }
@@ -52,8 +52,8 @@ class _SmtpRequestImpl implements SmtpRequest {
 class _SmtpHeadersImpl implements SmtpHeaders {
   final Map<String, String> headers;
 
+  List<String> _cc, _bcc;
   ContentType _contentType;
-
   DateTime _date;
 
   _SmtpHeadersImpl(Map<String, String> headers)
@@ -80,10 +80,10 @@ class _SmtpHeadersImpl implements SmtpHeaders {
   String get subject => headers['subject'];
 
   @override
-  String get cc => headers['Cc'];
+  List<String> get cc => _cc ??= (headers.containsKey('Cc') ? headers['Cc'].split(',') : []);
 
   @override
-  String get bcc => headers['Bcc'];
+  List<String> get bcc => _bcc ??= (headers.containsKey('Bcc') ? headers['Bcc'].split(',') : []);
 }
 
 class _SmtpConnectionInfoImpl implements SmtpConnectionInfo {
