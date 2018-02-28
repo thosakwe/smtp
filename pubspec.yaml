@@ -1,0 +1,3 @@
+name: smtp
+dependencies:
+  async: ^1.0.0
