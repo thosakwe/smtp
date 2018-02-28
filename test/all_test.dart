@@ -32,11 +32,11 @@ void main() {
     smtp.send(envelope);
 
     var request = await server.first;
-    expect(request.mailFrom, envelope.from);
-    expect(request.rcptTo, envelope.recipients.reversed.toList());
-    expect(request.headers.bcc, envelope.bccRecipients);
-    expect(request.headers.cc, envelope.ccRecipients);
-    expect(request.headers.contentType.mimeType, 'multipart/mixed');
-    expect(request.headers.subject, envelope.subject);
+    expect(request.envelope.originatorAddress, envelope.from);
+    expect(request.envelope.recipientAddresses, envelope.recipients.reversed.toList());
+    expect(request.envelope.headers.bcc, envelope.bccRecipients);
+    expect(request.envelope.headers.cc, envelope.ccRecipients);
+    expect(request.envelope.headers.contentType.mimeType, 'multipart/mixed');
+    expect(request.envelope.headers.subject, envelope.subject);
   });
 }

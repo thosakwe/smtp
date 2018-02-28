@@ -1,15 +1,15 @@
 part of smtp;
 
-abstract class SmtpRequest {
-  String get mailFrom;
-
-  List<String> get rcptTo;
-
-  SmtpHeaders get headers;
-
+abstract class SmtpMailObject {
   SmtpConnectionInfo get connectionInfo;
+  SmtpEnvelope get envelope;
+  String get content;
+}
 
-  String get message;
+abstract class SmtpEnvelope {
+  String get originatorAddress;
+  List<String> get recipientAddresses;
+  SmtpHeaders get headers;
 }
 
 abstract class SmtpHeaders {
@@ -38,15 +38,21 @@ abstract class SmtpConnectionInfo {
   int get remotePort;
 }
 
-class _SmtpRequestImpl implements SmtpRequest {
-  final String mailFrom;
-  final List<String> rcptTo;
-  final SmtpHeaders headers;
+class _SmtpMailObjectImpl implements SmtpMailObject {
   final SmtpConnectionInfo connectionInfo;
-  final String message;
+  final SmtpEnvelope envelope;
+  final String content;
 
-  _SmtpRequestImpl(this.mailFrom, this.rcptTo, this.headers,
-      this.connectionInfo, this.message);
+  _SmtpMailObjectImpl(this.connectionInfo, this.envelope, this.content);
+}
+
+class _SmtpEnvelopeImpl implements SmtpEnvelope {
+  final String originatorAddress;
+  final List<String> recipientAddresses;
+  final SmtpHeaders headers;
+
+  _SmtpEnvelopeImpl(
+      this.originatorAddress, this.recipientAddresses, this.headers);
 }
 
 class _SmtpHeadersImpl implements SmtpHeaders {
@@ -80,10 +86,12 @@ class _SmtpHeadersImpl implements SmtpHeaders {
   String get subject => headers['subject'];
 
   @override
-  List<String> get cc => _cc ??= (headers.containsKey('Cc') ? headers['Cc'].split(',') : []);
+  List<String> get cc =>
+      _cc ??= (headers.containsKey('Cc') ? headers['Cc'].split(',') : []);
 
   @override
-  List<String> get bcc => _bcc ??= (headers.containsKey('Bcc') ? headers['Bcc'].split(',') : []);
+  List<String> get bcc =>
+      _bcc ??= (headers.containsKey('Bcc') ? headers['Bcc'].split(',') : []);
 }
 
 class _SmtpConnectionInfoImpl implements SmtpConnectionInfo {

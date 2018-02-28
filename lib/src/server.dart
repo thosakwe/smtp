@@ -1,6 +1,6 @@
 part of smtp;
 
-abstract class SmtpServer extends Stream<SmtpRequest> {
+abstract class SmtpServer extends Stream<SmtpMailObject> {
   String hostname = Platform.localHostname;
   String greeting = '';
 
@@ -47,7 +47,7 @@ class _SmtpServerImpl extends SmtpServer {
   final InternetAddress address;
   final int port;
   final Future Function() closeFunction;
-  final StreamController<SmtpRequest> _stream = new StreamController();
+  final StreamController<SmtpMailObject> _stream = new StreamController();
   StreamSubscription _sub;
 
   _SmtpServerImpl(this.stream, this.address, this.port, this.closeFunction) {
@@ -62,7 +62,7 @@ class _SmtpServerImpl extends SmtpServer {
   }
 
   @override
-  StreamSubscription<SmtpRequest> listen(void onData(SmtpRequest event),
+  StreamSubscription<SmtpMailObject> listen(void onData(SmtpMailObject event),
       {Function onError, void onDone(), bool cancelOnError}) {
     return _stream.stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
@@ -153,10 +153,17 @@ class _SmtpServerImpl extends SmtpServer {
     }
 
     // Create request
-    var request = new _SmtpRequestImpl(mailFrom, rcptTo,
-        new _SmtpHeadersImpl(headers), connectionInfo, message.toString());
+    var mailObject = new _SmtpMailObjectImpl(
+      connectionInfo,
+      new _SmtpEnvelopeImpl(
+        mailFrom,
+        rcptTo,
+        new _SmtpHeadersImpl(headers),
+      ),
+      message.toString(),
+    );
 
-    _stream.add(request);
+    _stream.add(mailObject);
 
     // Send Bye
     socket.writeln('221 Bye');
