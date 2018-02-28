@@ -153,8 +153,12 @@ class _SmtpServerImpl extends SmtpServer {
     while (await lines.hasNext) {
       var line = await lines.next;
 
-      if (line == '.') break;
-      message.writeln(line);
+      if (line == '.')
+        break;
+      else if (line.startsWith('.'))
+        message.writeln(line.substring(1));
+      else
+        message.writeln(line);
     }
 
     // Create request
