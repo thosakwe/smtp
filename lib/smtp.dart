@@ -8,4 +8,4 @@ import 'package:intl/intl.dart';
 part 'src/protocol.dart';
 part 'src/server.dart';
 
-final DateFormat _fmt = new DateFormat('EEE, d MMM yyyy HH:mm:ss');
+final DateFormat _fmt = new DateFormat('EEE, d MMM yyyy HH:mm:ss Z');
