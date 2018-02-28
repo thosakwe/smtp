@@ -40,9 +40,12 @@ abstract class SmtpServer extends Stream<SmtpMailObject> {
 
 class _SmtpServerImpl extends SmtpServer {
   static final RegExp _header = new RegExp(r'([^:]+): ([^$]+)');
-  static final RegExp _helo = new RegExp(r'(HELO|EHLO) ([^$]+)');
-  static final RegExp _mailFrom = new RegExp(r'MAIL FROM:<([^>]+)>');
-  static final RegExp _rcptTo = new RegExp(r'RCPT TO:<([^>]+)>');
+  static final RegExp _helo =
+      new RegExp(r'(HELO|EHLO) ([^$]+)', caseSensitive: false);
+  static final RegExp _mailFrom =
+      new RegExp(r'MAIL FROM:<([^>]+)>', caseSensitive: false);
+  static final RegExp _rcptTo =
+      new RegExp(r'RCPT TO:<([^>]+)>', caseSensitive: false);
   final Stream<Socket> stream;
   final InternetAddress address;
   final int port;
