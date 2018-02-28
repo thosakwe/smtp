@@ -111,7 +111,9 @@ class _SmtpServerImpl extends SmtpServer {
         var m = _mailFrom.firstMatch(line);
 
         if (m == null) {
-          // TODO: What happens if MAIL FROM is not sent?
+          socket.writeln('503 command out of sequence');
+          await socket.close();
+          return;
         }
 
         mailFrom = m[1];

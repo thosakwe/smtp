@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:async/async.dart';
 import 'package:mailer/mailer.dart';
 import 'package:smtp/smtp.dart';
 import 'package:test/test.dart';
@@ -27,7 +30,7 @@ void main() {
       ..ccRecipients.add('also_also_hidden@recipient.com')
       ..subject = 'Testing the Dart Mailer library 語'
       ..text = 'This is a cool email message. Whats up? 語';
-      //..html = '<h1>Test</h1><p>Hey!</p>';
+    //..html = '<h1>Test</h1><p>Hey!</p>';
 
     smtp.send(envelope);
 
@@ -36,10 +39,31 @@ void main() {
 
     expect(request.supportsSmtpExtensions, isTrue);
     expect(request.envelope.originatorAddress, envelope.from);
-    expect(request.envelope.recipientAddresses, envelope.recipients.reversed.toList());
+    expect(request.envelope.recipientAddresses,
+        envelope.recipients.reversed.toList());
     expect(request.envelope.headers.bcc, envelope.bccRecipients);
     expect(request.envelope.headers.cc, envelope.ccRecipients);
     expect(request.envelope.headers.contentType.mimeType, 'multipart/mixed');
     expect(request.envelope.headers.subject, envelope.subject);
+  });
+
+  test('require mail from', () async {
+    var socket = await Socket.connect(server.address, server.port);
+    var s = socket.asBroadcastStream();
+    stdout.addStream(s);
+    var lines = new StreamQueue<String>(
+        s.transform(UTF8.decoder).transform(const LineSplitter()));
+
+    // Await 220
+    await lines.next;
+
+    socket.writeln('HELO dart_test');
+    await lines.next; // Await 250
+
+    // Send RCPT TO without MAIL FROM
+    socket.writeln('RCPT TO:<foo@bar.com>');
+    var line = await lines.next;
+    expect(line, startsWith('503'));
+    await socket.close();
   });
 }
