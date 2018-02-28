@@ -2,7 +2,9 @@ part of smtp;
 
 abstract class SmtpRequest {
   SmtpHeaders get headers;
+
   SmtpConnectionInfo get connectionInfo;
+
   String get message;
 }
 
@@ -20,6 +22,8 @@ abstract class SmtpHeaders {
 
 abstract class SmtpConnectionInfo {
   InternetAddress get remoteAddress;
+
+  String get remoteHostname;
 
   int get localPort;
 
@@ -62,7 +66,9 @@ class _SmtpHeadersImpl implements SmtpHeaders {
 
 class _SmtpConnectionInfoImpl implements SmtpConnectionInfo {
   final InternetAddress remoteAddress;
+  final String remoteHostname;
   final int localPort, remotePort;
 
-  _SmtpConnectionInfoImpl(this.remoteAddress, this.localPort, this.remotePort);
+  _SmtpConnectionInfoImpl(
+      this.remoteAddress, this.remoteHostname, this.localPort, this.remotePort);
 }
