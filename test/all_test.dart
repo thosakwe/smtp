@@ -21,11 +21,18 @@ void main() {
     var envelope = new Envelope()
       ..from = 'foo@bar.com'
       ..recipients.add('someone@somewhere.com')
+      ..recipients.add('someone_else@somewhere.com')
       ..bccRecipients.add('hidden@recipient.com')
       ..subject = 'Testing the Dart Mailer library 語'
-      ..text = 'This is a cool email message. Whats up? 語'
-      ..html = '<h1>Test</h1><p>Hey!</p>';
+      ..text = 'This is a cool email message. Whats up? 語';
+      //..html = '<h1>Test</h1><p>Hey!</p>';
 
-    await smtp.send(envelope);
+    smtp.send(envelope);
+
+    var request = await server.first;
+    expect(request.mailFrom, envelope.from);
+    expect(request.rcptTo, envelope.recipients.reversed.toList());
+
+    expect(request.headers.subject, envelope.subject);
   });
 }

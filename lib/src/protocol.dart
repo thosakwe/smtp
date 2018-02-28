@@ -3,7 +3,7 @@ part of smtp;
 abstract class SmtpRequest {
   String get mailFrom;
 
-  List<String> rcptTo;
+  List<String> get rcptTo;
 
   SmtpHeaders get headers;
 
@@ -20,6 +20,8 @@ abstract class SmtpHeaders {
   String get to;
 
   String get cc;
+
+  String get bcc;
 
   String get subject;
 }
@@ -55,20 +57,23 @@ class _SmtpHeadersImpl implements SmtpHeaders {
   @override
   DateTime get date {
     return _date ??=
-        (headers.containsKey('date') ? _fmt.parse(headers['date']) : null);
+        (headers.containsKey('Date') ? _fmt.parse(headers['Date']) : null);
   }
 
   @override
-  String get from => headers['from'];
+  String get from => headers['From'];
 
   @override
-  String get to => headers['to'];
+  String get to => headers['To'];
 
   @override
-  String get subject => headers['subject'];
+  String get subject => headers['Subject'];
 
   @override
-  String get cc => headers['cc'];
+  String get cc => headers['Cc'];
+
+  @override
+  String get bcc => headers['Bcc'];
 }
 
 class _SmtpConnectionInfoImpl implements SmtpConnectionInfo {
