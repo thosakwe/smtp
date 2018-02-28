@@ -80,6 +80,7 @@ class _SmtpServerImpl extends SmtpServer {
 
     // Wait for HELO
     SmtpConnectionInfo connectionInfo;
+    bool supportsSmtpExtensions;
 
     while (await lines.hasNext) {
       var line = await lines.next;
@@ -88,6 +89,7 @@ class _SmtpServerImpl extends SmtpServer {
       if (heloMatch != null) {
         connectionInfo = new _SmtpConnectionInfoImpl(
             socket.remoteAddress, heloMatch[2], port, socket.remotePort);
+        supportsSmtpExtensions = heloMatch[1].toLowerCase() == 'ehlo';
         break;
       }
     }
@@ -158,6 +160,7 @@ class _SmtpServerImpl extends SmtpServer {
     // Create request
     var mailObject = new _SmtpMailObjectImpl(
       connectionInfo,
+      supportsSmtpExtensions,
       new _SmtpEnvelopeImpl(
         mailFrom,
         rcptTo,

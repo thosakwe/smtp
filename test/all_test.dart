@@ -34,6 +34,7 @@ void main() {
     var request = await server.first;
     await request.close();
 
+    expect(request.supportsSmtpExtensions, isTrue);
     expect(request.envelope.originatorAddress, envelope.from);
     expect(request.envelope.recipientAddresses, envelope.recipients.reversed.toList());
     expect(request.envelope.headers.bcc, envelope.bccRecipients);

@@ -3,6 +3,8 @@ part of smtp;
 abstract class SmtpMailObject {
   SmtpConnectionInfo get connectionInfo;
 
+  bool get supportsSmtpExtensions;
+
   SmtpEnvelope get envelope;
 
   String get content;
@@ -46,12 +48,13 @@ abstract class SmtpConnectionInfo {
 
 class _SmtpMailObjectImpl implements SmtpMailObject {
   final SmtpConnectionInfo connectionInfo;
+  final bool supportsSmtpExtensions;
   final SmtpEnvelope envelope;
   final String content;
   final Socket socket;
 
-  _SmtpMailObjectImpl(
-      this.connectionInfo, this.envelope, this.content, this.socket);
+  _SmtpMailObjectImpl(this.connectionInfo, this.supportsSmtpExtensions,
+      this.envelope, this.content, this.socket);
 
   @override
   Future close({int statusCode: 221, String reasonPhrase: 'Bye'}) {
