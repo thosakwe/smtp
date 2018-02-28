@@ -72,11 +72,15 @@ class _SmtpServerImpl extends SmtpServer {
   }
 
   handleSocket(Socket socket) async {
-    var lines = new StreamQueue<String>(
-        socket.transform(UTF8.decoder).transform(const LineSplitter()));
-
     // Send 220
     socket.writeln('220 $hostname $greeting'.trim());
+
+    var lineStream =
+        socket.transform(UTF8.decoder).transform(const LineSplitter());
+
+    // TODO: Intercept lineStream to support non-sequential commands
+
+    var lines = new StreamQueue<String>(lineStream);
 
     // Wait for HELO
     SmtpConnectionInfo connectionInfo;
