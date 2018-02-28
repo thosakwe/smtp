@@ -12,14 +12,14 @@ abstract class SmtpServer extends Stream<SmtpRequest> {
         socket, socket.address, socket.port, socket.close);
   }
 
-  static Future<SmtpServer> bindSecure(address, int port,
-      SecurityContext context,
+  static Future<SmtpServer> bindSecure(
+      address, int port, SecurityContext context,
       {int backlog: 0,
-        bool v6Only: false,
-        bool shared: false,
-        bool requestClientCertificate: false,
-        bool requireClientCertificate: false,
-        List<String> supportedProtocols}) async {
+      bool v6Only: false,
+      bool shared: false,
+      bool requestClientCertificate: false,
+      bool requireClientCertificate: false,
+      List<String> supportedProtocols}) async {
     var socket = await SecureServerSocket.bind(address, port, context,
         backlog: backlog,
         v6Only: v6Only,
@@ -39,7 +39,10 @@ abstract class SmtpServer extends Stream<SmtpRequest> {
 }
 
 class _SmtpServerImpl extends SmtpServer {
+  static final RegExp _header = new RegExp(r'([^:]+): ([^$]+)');
   static final RegExp _helo = new RegExp(r'(HELO|EHLO) ([^$]+)');
+  static final RegExp _mailFrom = new RegExp(r'MAIL FROM:<([^>]+)>');
+  static final RegExp _rcptTo = new RegExp(r'RCPT TO:<([^>]+)>');
   final Stream<Socket> stream;
   final InternetAddress address;
   final int port;
@@ -66,11 +69,8 @@ class _SmtpServerImpl extends SmtpServer {
   }
 
   handleSocket(Socket socket) async {
-    var s = socket.asBroadcastStream();
-    stdout.addStream(s);
-
     var lines = new StreamQueue<String>(
-        s.transform(UTF8.decoder).transform(const LineSplitter()));
+        socket.transform(UTF8.decoder).transform(const LineSplitter()));
 
     // Send 220
     socket.writeln('220 $hostname $greeting'.trim());
@@ -93,9 +93,70 @@ class _SmtpServerImpl extends SmtpServer {
       // TODO: What happens if HELO is never sent?
     }
 
-    else {
-      print('Connected! ${connectionInfo.remoteHostname}');
+    // Send a greeting
+    socket.writeln('250 $hostname, I am glad to meet you');
+
+    String mailFrom;
+    List<String> rcptTo = [];
+
+    while (await lines.hasNext) {
+      var line = await lines.next;
+
+      if (mailFrom == null) {
+        var m = _mailFrom.firstMatch(line);
+
+        if (m == null) {
+          // TODO: What happens if MAIL FROM is not sent?
+        }
+
+        mailFrom = m[1];
+        socket.writeln('250 Ok');
+      } else {
+        var m = _rcptTo.firstMatch(line);
+        if (m != null) {
+          rcptTo.add(m[1]);
+          socket.writeln('250 Ok');
+        } else if (line == 'DATA') {
+          socket.writeln('354 End data with <CR><LF>.<CR><LF>');
+          break;
+        } else {
+          // TODO: What happens if we receive unrecognized data?
+        }
+      }
     }
+
+    // Read headers
+    Map<String, String> headers = {};
+
+    while (await lines.hasNext) {
+      var line = await lines.next;
+
+      if (line.isEmpty) break;
+
+      var m = _header.firstMatch(line);
+
+      if (m == null) {
+        // TODO: What if something other than a header is sent?
+      } else {
+        headers[m[1]] = m[2];
+      }
+    }
+
+    // Read message
+    var message = new StringBuffer();
+
+    while (await lines.hasNext) {
+      var line = await lines.next;
+
+      if (line == '.') break;
+      message.writeln(line);
+    }
+
+    // Create request
+    var request = new _SmtpRequestImpl(mailFrom, rcptTo,
+        new _SmtpHeadersImpl(headers), connectionInfo, message.toString());
+
+    _stream.add(request);
 
     // Send Bye
     socket.writeln('221 Bye');
