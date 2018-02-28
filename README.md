@@ -3,3 +3,19 @@
 [![build status](https://travis-ci.org/thosakwe/smtp.svg)](https://travis-ci.org/thosakwe/smtp)
 
 An SMTP server implementation in Dart.
+
+## Usage
+More documentation coming soon...
+
+```dart
+import 'package:smtp/smtp.dart';
+
+main() async {
+  var server = await SmtpServer.bind('127.0.0.1', 0);
+  
+  await for (var request in server) {
+    print(request.mailFrom);
+    print(request.headers.cc);
+  }
+}
+```
