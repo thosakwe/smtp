@@ -13,6 +13,8 @@ abstract class SmtpRequest {
 }
 
 abstract class SmtpHeaders {
+  ContentType get contentType;
+
   DateTime get date;
 
   String get from;
@@ -50,9 +52,13 @@ class _SmtpRequestImpl implements SmtpRequest {
 class _SmtpHeadersImpl implements SmtpHeaders {
   final Map<String, String> headers;
 
+  ContentType _contentType;
+
   DateTime _date;
 
   _SmtpHeadersImpl(this.headers);
+
+  ContentType get contentType => _contentType ??= (headers.containsKey('Content-Type') ? ContentType.parse(headers['Content-Type']) : null);
 
   @override
   DateTime get date {

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:mailer/mailer.dart';
 import 'package:smtp/smtp.dart';
 import 'package:test/test.dart';
@@ -32,7 +33,7 @@ void main() {
     var request = await server.first;
     expect(request.mailFrom, envelope.from);
     expect(request.rcptTo, envelope.recipients.reversed.toList());
-
+    expect(request.headers.contentType.mimeType, 'multipart/mixed');
     expect(request.headers.subject, envelope.subject);
   });
 }
