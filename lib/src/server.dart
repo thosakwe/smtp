@@ -164,12 +164,9 @@ class _SmtpServerImpl extends SmtpServer {
         new _SmtpHeadersImpl(headers),
       ),
       message.toString(),
+      socket,
     );
 
     _stream.add(mailObject);
-
-    // Send Bye
-    socket.writeln('221 Bye');
-    await socket.close();
   }
 }

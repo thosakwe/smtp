@@ -32,6 +32,8 @@ void main() {
     smtp.send(envelope);
 
     var request = await server.first;
+    await request.close();
+
     expect(request.envelope.originatorAddress, envelope.from);
     expect(request.envelope.recipientAddresses, envelope.recipients.reversed.toList());
     expect(request.envelope.headers.bcc, envelope.bccRecipients);

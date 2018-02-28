@@ -2,13 +2,19 @@ part of smtp;
 
 abstract class SmtpMailObject {
   SmtpConnectionInfo get connectionInfo;
+
   SmtpEnvelope get envelope;
+
   String get content;
+
+  Future close({int statusCode: 221, String reasonPhrase: 'Bye'});
 }
 
 abstract class SmtpEnvelope {
   String get originatorAddress;
+
   List<String> get recipientAddresses;
+
   SmtpHeaders get headers;
 }
 
@@ -42,8 +48,17 @@ class _SmtpMailObjectImpl implements SmtpMailObject {
   final SmtpConnectionInfo connectionInfo;
   final SmtpEnvelope envelope;
   final String content;
+  final Socket socket;
 
-  _SmtpMailObjectImpl(this.connectionInfo, this.envelope, this.content);
+  _SmtpMailObjectImpl(
+      this.connectionInfo, this.envelope, this.content, this.socket);
+
+  @override
+  Future close({int statusCode: 221, String reasonPhrase: 'Bye'}) {
+    // Send Bye
+    socket.writeln('$statusCode $reasonPhrase');
+    return socket.close();
+  }
 }
 
 class _SmtpEnvelopeImpl implements SmtpEnvelope {
