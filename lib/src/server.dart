@@ -30,10 +30,16 @@ abstract class SmtpServer extends Stream<SmtpRequest> {
     return new _SmtpServerImpl(
         socket, socket.address, socket.port, socket.close);
   }
+
+  InternetAddress get address;
+
+  int get port;
+
+  Future close({bool force: false});
 }
 
 class _SmtpServerImpl extends SmtpServer {
-  static final RegExp _helo = new RegExp(r'HELO ([^$]+)');
+  static final RegExp _helo = new RegExp(r'(HELO|EHLO) ([^$]+)');
   final Stream<Socket> stream;
   final InternetAddress address;
   final int port;
@@ -60,8 +66,11 @@ class _SmtpServerImpl extends SmtpServer {
   }
 
   handleSocket(Socket socket) async {
+    var s = socket.asBroadcastStream();
+    stdout.addStream(s);
+
     var lines = new StreamQueue<String>(
-        socket.transform(UTF8.decoder).transform(const LineSplitter()));
+        s.transform(UTF8.decoder).transform(const LineSplitter()));
 
     // Send 220
     socket.writeln('220 $hostname $greeting'.trim());
@@ -75,7 +84,7 @@ class _SmtpServerImpl extends SmtpServer {
 
       if (heloMatch != null) {
         connectionInfo = new _SmtpConnectionInfoImpl(
-            socket.remoteAddress, heloMatch[1], port, socket.remotePort);
+            socket.remoteAddress, heloMatch[2], port, socket.remotePort);
         break;
       }
     }
