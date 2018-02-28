@@ -1,6 +1,10 @@
 part of smtp;
 
 abstract class SmtpRequest {
+  String get mailFrom;
+
+  List<String> rcptTo;
+
   SmtpHeaders get headers;
 
   SmtpConnectionInfo get connectionInfo;
@@ -31,11 +35,14 @@ abstract class SmtpConnectionInfo {
 }
 
 class _SmtpRequestImpl implements SmtpRequest {
+  final String mailFrom;
+  final List<String> rcptTo;
   final SmtpHeaders headers;
   final SmtpConnectionInfo connectionInfo;
   final String message;
 
-  _SmtpRequestImpl(this.headers, this.connectionInfo, this.message);
+  _SmtpRequestImpl(this.mailFrom, this.rcptTo, this.headers,
+      this.connectionInfo, this.message);
 }
 
 class _SmtpHeadersImpl implements SmtpHeaders {
