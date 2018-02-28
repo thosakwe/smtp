@@ -56,9 +56,13 @@ class _SmtpHeadersImpl implements SmtpHeaders {
 
   DateTime _date;
 
-  _SmtpHeadersImpl(this.headers);
+  _SmtpHeadersImpl(Map<String, String> headers)
+      : this.headers = new CaseInsensitiveMap.from(headers);
 
-  ContentType get contentType => _contentType ??= (headers.containsKey('Content-Type') ? ContentType.parse(headers['Content-Type']) : null);
+  ContentType get contentType =>
+      _contentType ??= (headers.containsKey('Content-Type')
+          ? ContentType.parse(headers['Content-Type'])
+          : null);
 
   @override
   DateTime get date {
@@ -73,7 +77,7 @@ class _SmtpHeadersImpl implements SmtpHeaders {
   String get to => headers['To'];
 
   @override
-  String get subject => headers['Subject'];
+  String get subject => headers['subject'];
 
   @override
   String get cc => headers['Cc'];

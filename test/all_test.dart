@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:mailer/mailer.dart';
 import 'package:smtp/smtp.dart';
 import 'package:test/test.dart';
