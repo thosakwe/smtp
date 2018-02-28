@@ -66,4 +66,28 @@ void main() {
     expect(line, startsWith('503'));
     await socket.close();
   });
+
+  test('require rcpt to', () async {
+    var socket = await Socket.connect(server.address, server.port);
+    var s = socket.asBroadcastStream();
+    stdout.addStream(s);
+    var lines = new StreamQueue<String>(
+        s.transform(UTF8.decoder).transform(const LineSplitter()));
+
+    // Await 220
+    await lines.next;
+
+    socket.writeln('HELO dart_test');
+    await lines.next; // Await 250
+
+    socket.writeln('MAIL FROM:<foo@bar.com>');
+    await lines.next; // Await 250
+
+    // Send DATA without RCPT TO
+    socket.writeln('DATA');
+    var line = await lines.next;
+
+    expect(line, startsWith('554'));
+    await socket.close();
+  });
 }

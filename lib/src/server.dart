@@ -124,6 +124,12 @@ class _SmtpServerImpl extends SmtpServer {
           rcptTo.add(m[1]);
           socket.writeln('250 Ok');
         } else if (line == 'DATA') {
+          if (rcptTo.isEmpty) {
+            socket.writeln('554 no valid recipients');
+            await socket.close();
+            return;
+          }
+
           socket.writeln('354 End data with <CR><LF>.<CR><LF>');
           break;
         } else {
