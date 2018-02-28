@@ -1,6 +1,7 @@
 name: smtp
 dependencies:
   async: ^1.0.0
+  intl: ^0.15.0
 dev_dependencies:
   mailer: ^1.0.0
   test: ^0.12.0
