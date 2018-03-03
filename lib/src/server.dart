@@ -1,6 +1,6 @@
 part of smtp;
 
-abstract class SmtpServer extends Stream<SmtpMailObject> {
+abstract class SmtpServer extends Stream<SmtpRequest> {
   String hostname = Platform.localHostname;
   String greeting = '';
 
@@ -31,6 +31,8 @@ abstract class SmtpServer extends Stream<SmtpMailObject> {
         socket, socket.address, socket.port, socket.close);
   }
 
+  Stream<SmtpMailObject> get mailObjects;
+
   InternetAddress get address;
 
   int get port;
@@ -50,22 +52,30 @@ class _SmtpServerImpl extends SmtpServer {
   final InternetAddress address;
   final int port;
   final Future Function() closeFunction;
-  final StreamController<SmtpMailObject> _stream = new StreamController();
+  final StreamController<SmtpMailObject> _mailObjects = new StreamController();
+  final StreamController<SmtpRequest> _stream = new StreamController();
   StreamSubscription _sub;
 
   _SmtpServerImpl(this.stream, this.address, this.port, this.closeFunction) {
     _sub = stream.listen(handleSocket,
-        onError: _stream.addError, onDone: _stream.close);
+        onError: _mailObjects.addError, onDone: _mailObjects.close);
+  }
+
+  @override
+  Stream<SmtpMailObject> get mailObjects {
+    return _mailObjects.stream;
   }
 
   Future close({bool force: false}) async {
     // TODO: apply `force`
     _sub.cancel();
+    _mailObjects.close();
+    _stream.close();
     await closeFunction();
   }
 
   @override
-  StreamSubscription<SmtpMailObject> listen(void onData(SmtpMailObject event),
+  StreamSubscription<SmtpRequest> listen(void onData(SmtpRequest event),
       {Function onError, void onDone(), bool cancelOnError}) {
     return _stream.stream.listen(onData,
         onError: onError, onDone: onDone, cancelOnError: cancelOnError);
@@ -78,9 +88,38 @@ class _SmtpServerImpl extends SmtpServer {
     var lineStream =
         socket.transform(UTF8.decoder).transform(const LineSplitter());
 
-    // TODO: Intercept lineStream to support non-sequential commands
+    var interceptedLines = new StreamController<String>();
+    bool shouldIntercept = true, closed = false;
 
-    var lines = new StreamQueue<String>(lineStream);
+    StreamSubscription sub;
+
+    sub = lineStream.listen((line) {
+      if (!shouldIntercept)
+        interceptedLines.add(line);
+      else if (line.isNotEmpty) {
+        var split = line.split(' ');
+        var method = split[0].toUpperCase(), arguments = split.skip(1).toList();
+
+        if (method == 'HELO' ||
+            method == 'EHLO' ||
+            method == 'MAIL' ||
+            method == 'RCPT' ||
+            method == 'DATA')
+          interceptedLines.add(line);
+        else if (method == 'QUIT') {
+          closed = true;
+          sub.cancel();
+          interceptedLines.close();
+          socket.close();
+        } else {
+          var request = new _SmtpRequestImpl(method, arguments, socket, sub);
+          sub.pause();
+          _stream.add(request);
+        }
+      }
+    }, onError: interceptedLines.addError, onDone: interceptedLines.close);
+
+    var lines = new StreamQueue<String>(interceptedLines.stream);
 
     // Wait for HELO
     SmtpConnectionInfo connectionInfo;
@@ -97,6 +136,8 @@ class _SmtpServerImpl extends SmtpServer {
         break;
       }
     }
+
+    if (closed) return;
 
     if (connectionInfo == null) {
       // TODO: What happens if HELO is never sent?
@@ -134,6 +175,7 @@ class _SmtpServerImpl extends SmtpServer {
             return;
           }
 
+          shouldIntercept = false;
           socket.writeln('354 End data with <CR><LF>.<CR><LF>');
           break;
         } else {
@@ -186,6 +228,6 @@ class _SmtpServerImpl extends SmtpServer {
       socket,
     );
 
-    _stream.add(mailObject);
+    _mailObjects.add(mailObject);
   }
 }

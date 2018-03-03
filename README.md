@@ -15,7 +15,7 @@ import 'package:smtp/smtp.dart';
 main() async {
   var server = await SmtpServer.bind('127.0.0.1', 0);
   
-  await for (var request in server) {
+  await for (var request in server.mailObjects) {
     print(request.envelope.originatorAddress);
     print(request.envelope.headers.cc);
   }

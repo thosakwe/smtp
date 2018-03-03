@@ -34,17 +34,17 @@ void main() {
 
     smtp.send(envelope);
 
-    var request = await server.first;
-    await request.close();
+    var mailObject = await server.mailObjects.first;
+    await mailObject.close();
 
-    expect(request.supportsSmtpExtensions, isTrue);
-    expect(request.envelope.originatorAddress, envelope.from);
-    expect(request.envelope.recipientAddresses,
+    expect(mailObject.supportsSmtpExtensions, isTrue);
+    expect(mailObject.envelope.originatorAddress, envelope.from);
+    expect(mailObject.envelope.recipientAddresses,
         envelope.recipients.reversed.toList());
-    expect(request.envelope.headers.bcc, envelope.bccRecipients);
-    expect(request.envelope.headers.cc, envelope.ccRecipients);
-    expect(request.envelope.headers.contentType.mimeType, 'multipart/mixed');
-    expect(request.envelope.headers.subject, envelope.subject);
+    expect(mailObject.envelope.headers.bcc, envelope.bccRecipients);
+    expect(mailObject.envelope.headers.cc, envelope.ccRecipients);
+    expect(mailObject.envelope.headers.contentType.mimeType, 'multipart/mixed');
+    expect(mailObject.envelope.headers.subject, envelope.subject);
   });
 
   test('require mail from', () async {

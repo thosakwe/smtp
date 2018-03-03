@@ -1,5 +1,12 @@
 part of smtp;
 
+abstract class SmtpRequest implements IOSink {
+  String get method;
+  List<String> get arguments;
+
+  Future close({int statusCode: 221, String reasonPhrase: 'Bye'});
+}
+
 abstract class SmtpMailObject {
   SmtpConnectionInfo get connectionInfo;
 
@@ -44,6 +51,55 @@ abstract class SmtpConnectionInfo {
   int get localPort;
 
   int get remotePort;
+}
+
+class _SmtpRequestImpl implements SmtpRequest {
+  final String method;
+  final List<String> arguments;
+  final Socket socket;
+  final StreamSubscription sub;
+
+  _SmtpRequestImpl(this.method, this.arguments, this.socket, this.sub);
+
+  @override
+  Future close({int statusCode: 221, String reasonPhrase: 'Bye'}) async  {
+    socket.writeln('$statusCode $reasonPhrase');
+    sub.resume();
+  }
+
+  @override
+  Encoding get encoding => socket.encoding;
+
+  void set encoding(Encoding encoding) {
+    socket.encoding = encoding;
+  }
+
+  @override
+  Future get done => socket.done;
+
+  @override
+  Future flush() => socket.flush();
+
+  @override
+  Future addStream(Stream<List<int>> stream) => socket.addStream(stream);
+
+  @override
+  void addError(error, [StackTrace stackTrace]) => socket.addError(error, stackTrace);
+
+  @override
+  void writeCharCode(int charCode) => socket.writeCharCode(charCode);
+
+  @override
+  void writeln([Object obj = ""]) => socket.writeln(obj);
+
+  @override
+  void writeAll(Iterable objects, [String separator = ""]) => socket.writeAll(objects, separator);
+
+  @override
+  void write(Object obj) => socket.write(obj);
+
+  @override
+  void add(List<int> data) => socket.add(data);
 }
 
 class _SmtpMailObjectImpl implements SmtpMailObject {
