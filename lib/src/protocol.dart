@@ -62,7 +62,7 @@ class _SmtpRequestImpl implements SmtpRequest {
   _SmtpRequestImpl(this.method, this.arguments, this.socket, this.sub);
 
   @override
-  Future close({int statusCode: 221, String reasonPhrase: 'Bye'}) async  {
+  Future close({int statusCode: 221, String reasonPhrase: 'Bye'}) async {
     socket.writeln('$statusCode $reasonPhrase');
     sub.resume();
   }
@@ -84,7 +84,8 @@ class _SmtpRequestImpl implements SmtpRequest {
   Future addStream(Stream<List<int>> stream) => socket.addStream(stream);
 
   @override
-  void addError(error, [StackTrace stackTrace]) => socket.addError(error, stackTrace);
+  void addError(error, [StackTrace stackTrace]) =>
+      socket.addError(error, stackTrace);
 
   @override
   void writeCharCode(int charCode) => socket.writeCharCode(charCode);
@@ -93,7 +94,8 @@ class _SmtpRequestImpl implements SmtpRequest {
   void writeln([Object obj = ""]) => socket.writeln(obj);
 
   @override
-  void writeAll(Iterable objects, [String separator = ""]) => socket.writeAll(objects, separator);
+  void writeAll(Iterable objects, [String separator = ""]) =>
+      socket.writeAll(objects, separator);
 
   @override
   void write(Object obj) => socket.write(obj);
