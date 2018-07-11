@@ -61,3 +61,4 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+.dart_tool
