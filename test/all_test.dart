@@ -1,6 +1,7 @@
-import 'dart:convert';
+import 'dart:convert' show LineSplitter;
 import 'dart:io';
 import 'package:async/async.dart';
+import 'package:dart2_constant/convert.dart';
 import 'package:mailer/mailer.dart';
 import 'package:smtp/smtp.dart';
 import 'package:test/test.dart';
@@ -52,7 +53,7 @@ void main() {
     var s = socket.asBroadcastStream();
     stdout.addStream(s);
     var lines = new StreamQueue<String>(
-        s.transform(UTF8.decoder).transform(const LineSplitter()));
+        s.transform(utf8.decoder).transform(const LineSplitter()));
 
     // Await 220
     await lines.next;
@@ -72,7 +73,7 @@ void main() {
     var s = socket.asBroadcastStream();
     stdout.addStream(s);
     var lines = new StreamQueue<String>(
-        s.transform(UTF8.decoder).transform(const LineSplitter()));
+        s.transform(utf8.decoder).transform(const LineSplitter()));
 
     // Await 220
     await lines.next;

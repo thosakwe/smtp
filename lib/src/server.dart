@@ -86,7 +86,7 @@ class _SmtpServerImpl extends SmtpServer {
     socket.writeln('220 $hostname $greeting'.trim());
 
     var lineStream =
-        socket.transform(UTF8.decoder).transform(const LineSplitter());
+        socket.transform(utf8.decoder).transform(const LineSplitter());
 
     var interceptedLines = new StreamController<String>();
     bool shouldIntercept = true, closed = false;
@@ -104,6 +104,7 @@ class _SmtpServerImpl extends SmtpServer {
             method == 'EHLO' ||
             method == 'MAIL' ||
             method == 'RCPT' ||
+            method == 'RSET' ||
             method == 'DATA')
           interceptedLines.add(line);
         else if (method == 'QUIT') {
@@ -111,6 +112,8 @@ class _SmtpServerImpl extends SmtpServer {
           sub.cancel();
           interceptedLines.close();
           socket.close();
+        } else if (method == 'NOOP') {
+          // Do nothing; No-op.
         } else {
           var request = new _SmtpRequestImpl(method, arguments, socket, sub);
           sub.pause();
@@ -140,7 +143,9 @@ class _SmtpServerImpl extends SmtpServer {
     if (closed) return;
 
     if (connectionInfo == null) {
-      // TODO: What happens if HELO is never sent?
+      // If HELO is never sent, just close the connection.
+      socket.close();
+      return;
     }
 
     // Send a greeting
@@ -179,7 +184,8 @@ class _SmtpServerImpl extends SmtpServer {
           socket.writeln('354 End data with <CR><LF>.<CR><LF>');
           break;
         } else {
-          // TODO: What happens if we receive unrecognized data?
+          // If we receive unrecognized data, close the socket.
+          socket.close();
         }
       }
     }
@@ -195,7 +201,9 @@ class _SmtpServerImpl extends SmtpServer {
       var m = _header.firstMatch(line);
 
       if (m == null) {
-        // TODO: What if something other than a header is sent?
+        // If something other than a header is sent, just close the socket.
+        socket.close();
+        return;
       } else {
         headers[m[1]] = m[2];
       }
