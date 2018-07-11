@@ -3,7 +3,7 @@ version: 1.0.0
 description: An SMTP 5321 server implementation in Dart.
 author: Tobe O <thosakwe@gmail.com>
 homepage: https://github.com/thosakwe/smtp
-enviroment:
+environment:
   sdk: ">=1.8.0 <3.0.0"
 dependencies:
   async: ^1.0.0
@@ -12,4 +12,4 @@ dependencies:
   intl: ^0.15.0
 dev_dependencies:
   mailer: ^1.0.0
-  test: ^0.12.0
+  test:
