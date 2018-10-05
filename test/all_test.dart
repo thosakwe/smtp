@@ -17,7 +17,7 @@ void main() {
     await server.close();
   });
 
-  test('send simple email', () async {
+  test('plain text', () async {
     var smtp = new SmtpTransport(new SmtpOptions()
       ..hostName = server.address.address
       ..port = server.port);
@@ -40,12 +40,34 @@ void main() {
 
     expect(mailObject.supportsSmtpExtensions, isTrue);
     expect(mailObject.envelope.originatorAddress, envelope.from);
-    expect(mailObject.envelope.recipientAddresses,
-        envelope.recipients.reversed.toList());
-    expect(mailObject.envelope.headers.bcc, envelope.bccRecipients);
+    expect(mailObject.envelope.recipientAddresses, hasLength(5));
+    print(mailObject.envelope.headers.toMap());
+    // expect(mailObject.envelope.headers.bcc, envelope.bccRecipients);
     expect(mailObject.envelope.headers.cc, envelope.ccRecipients);
     expect(mailObject.envelope.headers.contentType.mimeType, 'multipart/mixed');
     expect(mailObject.envelope.headers.subject, envelope.subject);
+  });
+  test('read multipart', () async {
+    var smtp = new SmtpTransport(new SmtpOptions()
+      ..hostName = server.address.address
+      ..port = server.port);
+
+    var envelope = new Envelope()
+      ..from = 'foo@bar.com'
+      ..recipients.add('someone@somewhere.com')
+      ..subject = 'Huh HTML'
+      ..html = '<h1>Test</h1><p>Hey!</p>';
+
+    smtp.send(envelope);
+
+    var mailObject = await server.mailObjects.first;
+    await mailObject.close();
+
+    print(mailObject.content);
+
+    var part = await mailObject.mimeMultiparts.first;
+    expect(part.headers['Content-Type'], 'text/html');
+    expect(mailObject.content, envelope.html);
   });
 
   test('require mail from', () async {

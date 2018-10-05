@@ -37,7 +37,7 @@ abstract class SmtpServer extends Stream<SmtpRequest> {
 
   int get port;
 
-  Future close({bool force: false});
+  Future close();
 }
 
 class _SmtpServerImpl extends SmtpServer {
@@ -66,8 +66,7 @@ class _SmtpServerImpl extends SmtpServer {
     return _mailObjects.stream;
   }
 
-  Future close({bool force: false}) async {
-    // TODO: apply `force`
+  Future close() async {
     _sub.cancel();
     _mailObjects.close();
     _stream.close();

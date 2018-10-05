@@ -16,6 +16,8 @@ abstract class SmtpMailObject {
 
   String get content;
 
+  Stream<MimeMultipart> get mimeMultiparts;
+
   Future close({int statusCode: 221, String reasonPhrase: 'Bye'});
 }
 
@@ -28,7 +30,7 @@ abstract class SmtpEnvelope {
 }
 
 abstract class SmtpHeaders {
-  ContentType get contentType;
+  MediaType get contentType;
 
   DateTime get date;
 
@@ -41,6 +43,8 @@ abstract class SmtpHeaders {
   List<String> get bcc;
 
   String get subject;
+
+  Map<String, String> toMap();
 }
 
 abstract class SmtpConnectionInfo {
@@ -120,6 +124,24 @@ class _SmtpMailObjectImpl implements SmtpMailObject {
     socket.writeln('$statusCode $reasonPhrase');
     return socket.close();
   }
+
+  @override
+  Stream<MimeMultipart> get mimeMultiparts {
+    if (envelope.headers.contentType?.type != 'multipart') {
+      throw new FormatException(
+          'Can only parse a multipart/* body into separate parts.');
+    }
+
+    var boundary = envelope.headers.contentType.parameters['boundary'];
+
+    if (boundary?.trim()?.isNotEmpty != true) {
+      throw new FormatException(
+          'Cannot parse body into parts; no boundary parameter was specified in the `Content-Type` header.');
+    }
+
+    var stream = new Stream<List<int>>.fromIterable([utf8.encode(content)]);
+    return stream.transform(new MimeMultipartTransformer(boundary));
+  }
 }
 
 class _SmtpEnvelopeImpl implements SmtpEnvelope {
@@ -135,21 +157,21 @@ class _SmtpHeadersImpl implements SmtpHeaders {
   final Map<String, String> headers;
 
   List<String> _cc, _bcc;
-  ContentType _contentType;
+  MediaType _contentType;
   DateTime _date;
 
   _SmtpHeadersImpl(Map<String, String> headers)
       : this.headers = new CaseInsensitiveMap.from(headers);
 
-  ContentType get contentType =>
+  MediaType get contentType =>
       _contentType ??= (headers.containsKey('Content-Type')
-          ? ContentType.parse(headers['Content-Type'])
+          ? new MediaType.parse(headers['Content-Type'])
           : null);
 
   @override
   DateTime get date {
     return _date ??=
-        (headers.containsKey('Date') ? _fmt.parse(headers['Date']) : null);
+        (headers.containsKey('Date') ? HttpDate.parse(headers['Date']) : null);
   }
 
   @override
@@ -168,6 +190,9 @@ class _SmtpHeadersImpl implements SmtpHeaders {
   @override
   List<String> get bcc =>
       _bcc ??= (headers.containsKey('Bcc') ? headers['Bcc'].split(',') : []);
+
+  @override
+  Map<String, String> toMap() => headers;
 }
 
 class _SmtpConnectionInfoImpl implements SmtpConnectionInfo {
