@@ -1,6 +1,6 @@
 name: smtp
-version: 1.0.0
-description: An SMTP 5321 server implementation in Dart.
+version: 1.0.0+1
+description: An SMTP 5321 server implementation in Dart. Use this to receive e-mail messages within the Dart VM.
 author: Tobe O <thosakwe@gmail.com>
 homepage: https://github.com/thosakwe/smtp
 environment:
